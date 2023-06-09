@@ -1,0 +1,6 @@
+[tool.flake8]
+plugins = 'flake8_black'
+exclude = '.git, __pycache__, venv, templates, .env, .gitignore, migrations'
+max-line-length = 88
+extend-ignore = 'E203'
+per-file-ignores = "__init__.py:F401, ./apps/users/apps.py:F401"

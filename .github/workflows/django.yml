@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -16,22 +15,45 @@ jobs:
         python-version: [3.9]
 
     steps:
+    - name: Checkout repository code
     - uses: actions/checkout@v3
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache
-      uses: actions/cache@v1.2.1
-      with:
-        python-version: ${{ matrix.python-version }}
-        path: usr/bin/cache/
-        cache: 'pip'
-        run: pip install -r requirements.txt
-    - name: Install Dependencies
+        cache: "pip"
+        cache-dependency-path: '**/requirements.txt'
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
+
+    - name: Clone secret Variables
+      run: |
+        echo "SECRET_KEY = 'django-insecure-dummy-secret'" > ./proj/.env
+        echo "DEBUG = 'django-insecure-dummy-secret'" > ./proj/.env
+
+    - name: Flake8 Lint
+      uses: py-actions/flake8@v3
+      with:
+        ignore: "E203"
+        per-file-ignores: "__init__.py:F401, ./applications/users/applications.py:F401"
+        max-line-length: "100"
+        path: "src"
+        plugins: "flake8-bugbear==22.1.11 flake8-black"
+
+#    - name: Install Dependencies
+#      run: |
+#        python -m pip install --upgrade pip
+#        pip install -r requirements.txt
+
+    - name: Initialize Migrations
+      run: |
+        python manage.py makemigrations
+        python manage.pt migrate
+        python manage.py check
+
     - name: Run Tests
       run: |
+        cd ./src
         python manage.py test
